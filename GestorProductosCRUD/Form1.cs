@@ -31,6 +31,8 @@ namespace GestorProductosCRUD
             btnLimpiar.Click += (_, _) => LimpiarCampos();
             txtBuscar.TextChanged += TxtBuscar_TextChanged;
             CargarDatosIniciales();
+            dgvProductos.CellClick += DgvProductos_CellClick;
+            btnActualizar.Click += BtnActualizar_Click;
         }
 
         private void ConfigurarInterfaz()
@@ -224,6 +226,61 @@ namespace GestorProductosCRUD
             dgvProductos.DataSource = null;
             dgvProductos.DataSource = filtrados;
             dgvProductos.Refresh();
+        }
+
+        private void DgvProductos_CellClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            var fila = dgvProductos.Rows[e.RowIndex];
+            if (fila.DataBoundItem is Producto producto)
+            {
+                _idSeleccionado = producto.Id;
+                txtNombre.Text = producto.Nombre;
+                cmbCategoria.SelectedItem = producto.Categoria;
+                txtPrecio.Text = producto.Precio.ToString();
+                txtStock.Text = producto.Stock.ToString();
+            }
+        }
+
+        private void BtnActualizar_Click(object? sender, EventArgs e)
+        {
+            if (_idSeleccionado == -1)
+            {
+                MessageBox.Show("Selecciona un producto de la tabla para actualizar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("El nombre del producto es obligatorio.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio < 0)
+            {
+                MessageBox.Show("Ingresa un precio válido.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(txtStock.Text, out int stock) || stock < 0)
+            {
+                MessageBox.Show("Ingresa una cantidad de stock válida.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var producto = _productos.FirstOrDefault(p => p.Id == _idSeleccionado);
+            if (producto != null)
+            {
+                producto.Nombre = txtNombre.Text.Trim();
+                producto.Categoria = cmbCategoria.SelectedItem?.ToString() ?? "Otros";
+                producto.Precio = precio;
+                producto.Stock = stock;
+
+                ActualizarTabla();
+                LimpiarCampos();
+                MessageBox.Show("Producto actualizado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
     }
