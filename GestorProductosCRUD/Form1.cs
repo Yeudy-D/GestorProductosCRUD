@@ -26,6 +26,8 @@ namespace GestorProductosCRUD
         {
             InitializeComponent();
             ConfigurarInterfaz();
+            btnAgregar.Click += BtnAgregar_Click;
+            btnLimpiar.Click += (_, _) => LimpiarCampos();
         }
 
         private void ConfigurarInterfaz()
@@ -147,5 +149,54 @@ namespace GestorProductosCRUD
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
             Cursor = Cursors.Hand
         };
+
+        private void BtnAgregar_Click(object? sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("El nombre del producto es obligatorio.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio < 0)
+            {
+                MessageBox.Show("Ingresa un precio válido.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(txtStock.Text, out int stock) || stock < 0)
+            {
+                MessageBox.Show("Ingresa una cantidad de stock válida.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            _productos.Add(new Producto
+            {
+                Id = _siguienteId++,
+                Nombre = txtNombre.Text.Trim(),
+                Categoria = cmbCategoria.SelectedItem?.ToString() ?? "Otros",
+                Precio = precio,
+                Stock = stock
+            });
+
+            ActualizarTabla();
+            LimpiarCampos();
+        }
+
+        private void ActualizarTabla()
+        {
+            dgvProductos.DataSource = null;
+            dgvProductos.DataSource = new List<Producto>(_productos);
+        }
+
+        private void LimpiarCampos()
+        {
+            txtNombre.Clear();
+            cmbCategoria.SelectedIndex = 0;
+            txtPrecio.Clear();
+            txtStock.Clear();
+            _idSeleccionado = -1;
+            txtNombre.Focus();
+        }
     }
 }
