@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -28,6 +29,10 @@ namespace GestorProductosCRUD
             ConfigurarInterfaz();
             btnAgregar.Click += BtnAgregar_Click;
             btnLimpiar.Click += (_, _) => LimpiarCampos();
+            txtBuscar.TextChanged += TxtBuscar_TextChanged;
+            CargarDatosIniciales();
+            dgvProductos.CellClick += DgvProductos_CellClick;
+            btnActualizar.Click += BtnActualizar_Click;
         }
 
         private void ConfigurarInterfaz()
@@ -198,5 +203,85 @@ namespace GestorProductosCRUD
             _idSeleccionado = -1;
             txtNombre.Focus();
         }
+
+        private void CargarDatosIniciales()
+        {
+            _productos.Add(new Producto { Id = _siguienteId++, Nombre = "Laptop Lenovo", Categoria = "Electrónica", Precio = 35000, Stock = 5 });
+            _productos.Add(new Producto { Id = _siguienteId++, Nombre = "Mouse Inalámbrico", Categoria = "Accesorios", Precio = 850, Stock = 20 });
+            _productos.Add(new Producto { Id = _siguienteId++, Nombre = "Silla Ergonómica", Categoria = "Oficina", Precio = 7500, Stock = 8 });
+            ActualizarTabla();
+        }
+
+        private void TxtBuscar_TextChanged(object? sender, EventArgs e)
+        {
+            string filtro = txtBuscar.Text.Trim();
+
+            var filtrados = string.IsNullOrEmpty(filtro)
+                ? _productos.ToList()
+                : _productos.Where(p =>
+                    (p.Nombre ?? "").Contains(filtro, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Categoria ?? "").Contains(filtro, StringComparison.OrdinalIgnoreCase))
+                  .ToList();
+
+            dgvProductos.DataSource = null;
+            dgvProductos.DataSource = filtrados;
+            dgvProductos.Refresh();
+        }
+
+        private void DgvProductos_CellClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            var fila = dgvProductos.Rows[e.RowIndex];
+            if (fila.DataBoundItem is Producto producto)
+            {
+                _idSeleccionado = producto.Id;
+                txtNombre.Text = producto.Nombre;
+                cmbCategoria.SelectedItem = producto.Categoria;
+                txtPrecio.Text = producto.Precio.ToString();
+                txtStock.Text = producto.Stock.ToString();
+            }
+        }
+
+        private void BtnActualizar_Click(object? sender, EventArgs e)
+        {
+            if (_idSeleccionado == -1)
+            {
+                MessageBox.Show("Selecciona un producto de la tabla para actualizar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("El nombre del producto es obligatorio.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(txtPrecio.Text, out decimal precio) || precio < 0)
+            {
+                MessageBox.Show("Ingresa un precio válido.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(txtStock.Text, out int stock) || stock < 0)
+            {
+                MessageBox.Show("Ingresa una cantidad de stock válida.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var producto = _productos.FirstOrDefault(p => p.Id == _idSeleccionado);
+            if (producto != null)
+            {
+                producto.Nombre = txtNombre.Text.Trim();
+                producto.Categoria = cmbCategoria.SelectedItem?.ToString() ?? "Otros";
+                producto.Precio = precio;
+                producto.Stock = stock;
+
+                ActualizarTabla();
+                LimpiarCampos();
+                MessageBox.Show("Producto actualizado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
     }
 }
