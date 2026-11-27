@@ -33,6 +33,7 @@ namespace GestorProductosCRUD
             CargarDatosIniciales();
             dgvProductos.CellClick += DgvProductos_CellClick;
             btnActualizar.Click += BtnActualizar_Click;
+            btnEliminar.Click += BtnEliminar_Click;
         }
 
         private void ConfigurarInterfaz()
@@ -282,6 +283,33 @@ namespace GestorProductosCRUD
                 MessageBox.Show("Producto actualizado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
+        private void BtnEliminar_Click(object? sender, EventArgs e)
+        {
+            if (_idSeleccionado == -1)
+            {
+                MessageBox.Show("Selecciona un producto de la tabla para eliminar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var confirmacion = MessageBox.Show(
+                "¿Estás seguro de que deseas eliminar este producto?",
+                "Confirmar eliminación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmacion == DialogResult.Yes)
+            {
+                var producto = _productos.FirstOrDefault(p => p.Id == _idSeleccionado);
+                if (producto != null)
+                {
+                    _productos.Remove(producto);
+                    ActualizarTabla();
+                    LimpiarCampos();
+                    MessageBox.Show("Producto eliminado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
 
     }
+
 }
