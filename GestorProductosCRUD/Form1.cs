@@ -185,7 +185,7 @@ namespace GestorProductosCRUD
             ActualizarTabla();
             LimpiarCampos();
         }
-
+        // ACTULIZAR TABLA Y LIMPIAR CAMPOS
         private void ActualizarTabla()
         {
             dgvProductos.DataSource = null;
