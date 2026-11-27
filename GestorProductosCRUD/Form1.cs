@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -28,6 +29,8 @@ namespace GestorProductosCRUD
             ConfigurarInterfaz();
             btnAgregar.Click += BtnAgregar_Click;
             btnLimpiar.Click += (_, _) => LimpiarCampos();
+            txtBuscar.TextChanged += TxtBuscar_TextChanged;
+            CargarDatosIniciales();
         }
 
         private void ConfigurarInterfaz()
@@ -198,5 +201,30 @@ namespace GestorProductosCRUD
             _idSeleccionado = -1;
             txtNombre.Focus();
         }
+
+        private void CargarDatosIniciales()
+        {
+            _productos.Add(new Producto { Id = _siguienteId++, Nombre = "Laptop Lenovo", Categoria = "Electrónica", Precio = 35000, Stock = 5 });
+            _productos.Add(new Producto { Id = _siguienteId++, Nombre = "Mouse Inalámbrico", Categoria = "Accesorios", Precio = 850, Stock = 20 });
+            _productos.Add(new Producto { Id = _siguienteId++, Nombre = "Silla Ergonómica", Categoria = "Oficina", Precio = 7500, Stock = 8 });
+            ActualizarTabla();
+        }
+
+        private void TxtBuscar_TextChanged(object? sender, EventArgs e)
+        {
+            string filtro = txtBuscar.Text.Trim();
+
+            var filtrados = string.IsNullOrEmpty(filtro)
+                ? _productos.ToList()
+                : _productos.Where(p =>
+                    (p.Nombre ?? "").Contains(filtro, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Categoria ?? "").Contains(filtro, StringComparison.OrdinalIgnoreCase))
+                  .ToList();
+
+            dgvProductos.DataSource = null;
+            dgvProductos.DataSource = filtrados;
+            dgvProductos.Refresh();
+        }
+
     }
 }
